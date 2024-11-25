@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/list"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 
 	"github.com/timskovjacobsen/ldapget/client"
 	"github.com/timskovjacobsen/ldapget/config"
@@ -58,7 +59,38 @@ func GroupsCommand() *cobra.Command {
 		Short: "List AD groups with related information",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			client.GroupsSearch(cfg)
+			groups := client.Groups(cfg)
+
+			var headerStyle = lipgloss.NewStyle().
+				BorderStyle(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#cbba82")).
+				BorderTop(true).
+				BorderBottom(true)
+			var nameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#cbba82"))
+
+			fmt.Println(headerStyle.Render("\nAD Groups Information:"))
+			separator := lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#555555"))
+
+			width, _, _ := term.GetSize(int(os.Stderr.Fd()))
+			horizontalRule := separator.Render(strings.Repeat("─", width))
+			fmt.Println(horizontalRule)
+
+			for i, group := range groups {
+				fmt.Printf("%d. ", i+1)
+				fmt.Println(nameStyle.Render(fmt.Sprintf("%s", group.Name)))
+				fmt.Printf("   🗺️ %s\n", group.DN)
+				fmt.Printf("   🏷️ %s group\n", group.Kind)
+				if group.SystemCreated {
+					fmt.Printf("   System created: %s\n", "yes")
+				}
+				fmt.Printf("   🎯 %s scope\n", group.Scope)
+				if group.Description != "" {
+					fmt.Printf("   📝 %s\n", group.Description)
+				}
+				fmt.Printf("   👥 %d members\n", group.Members)
+				fmt.Println(horizontalRule)
+			}
 		},
 	}
 	return cmd

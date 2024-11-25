@@ -7,6 +7,7 @@ require (
 	github.com/go-ldap/ldap/v3 v3.4.8
 	github.com/pelletier/go-toml v1.9.5
 	github.com/spf13/cobra v1.8.1
+	golang.org/x/term v0.18.0
 )
 
 require (

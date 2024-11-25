@@ -6,13 +6,8 @@ import (
 	"sort"
 	"strconv"
 
-	"strings"
-
-	"github.com/charmbracelet/lipgloss"
-	// "github.com/charmbracelet/lipgloss/list"
 	"github.com/go-ldap/ldap/v3"
 	"github.com/timskovjacobsen/ldapget/config"
-	// "github.com/timskovjacobsen/ldapget/layout"
 )
 
 type GroupInfo struct {
@@ -67,7 +62,7 @@ func groupTypeInfo(groupType int64) (scope, kind string, isSystem bool) {
 	return scope, kind, isSystem
 }
 
-func Groups(conn *ldap.Conn, baseDN string) (*ldap.SearchResult, error) {
+func GroupsRequest(conn *ldap.Conn, baseDN string) (*ldap.SearchResult, error) {
 	filter := fmt.Sprintf("(&(objectClass=group))")
 	attributes := []string{
 		"cn",
@@ -88,21 +83,20 @@ func Groups(conn *ldap.Conn, baseDN string) (*ldap.SearchResult, error) {
 	return conn.Search(searchRequest)
 }
 
-func GroupsSearch(cfg *config.Config) {
+// Return a list of groups with all relevant info attached
+func Groups(cfg *config.Config) []GroupInfo {
 	baseDN := cfg.Client.Search.RootDN
 	conn, err := BindToLdapServer(*cfg)
 	if err != nil {
 		log.Fatalf("failed to bind to ldap server: %v", err)
 	}
-	result, err := Groups(conn, baseDN)
-
+	result, err := GroupsRequest(conn, baseDN)
 	if err != nil {
 		log.Fatalf("failed to search LDAP server for groups: %v", err)
 	}
 	if len(result.Entries) == 0 {
 		log.Fatalf("no groups found")
 	}
-
 	var groups []GroupInfo
 	for _, entry := range result.Entries {
 		// Decode the insane group type that is returned
@@ -120,39 +114,8 @@ func GroupsSearch(cfg *config.Config) {
 		}
 		groups = append(groups, group)
 	}
-
-	// Create formatted output
-	var headerStyle = lipgloss.NewStyle().
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#cbba82")).
-		BorderTop(true).
-		BorderBottom(true)
-	// itemStyle := lipgloss.NewStyle().MarginLeft(1)
-
 	sort.Slice(groups, func(i, j int) bool {
 		return groups[i].Name < groups[j].Name
 	})
-
-	fmt.Println(headerStyle.Render("\nAD Groups Information:"))
-	fmt.Println(strings.Repeat("-", 80))
-
-	for i, group := range groups {
-		fmt.Printf("%d. %s\n", i+1, group.Name)
-		fmt.Printf("   Location: %s\n", group.DN)
-		fmt.Printf("   Kind: %s\n", group.Kind)
-		if group.SystemCreated {
-			fmt.Printf("   System created: %s\n", "yes")
-		}
-		fmt.Printf("   Scope: %s\n", group.Scope)
-		if group.Description != "" {
-			fmt.Printf("   Description: %s\n", group.Description)
-		}
-		fmt.Printf("   Members: %d\n", group.Members)
-		fmt.Println(strings.Repeat("-", 80))
-	}
-
-	// enumeratorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#646464"))
-	// itemStyle := lipgloss.NewStyle().MarginLeft(1)
-	// formattedList := list.New(groupList).ItemStyle(itemStyle).EnumeratorStyle(enumeratorStyle).Enumerator(layout.Arabic)
-	// fmt.Println(formattedList)
+	return groups
 }
