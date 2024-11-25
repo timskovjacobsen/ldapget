@@ -5,20 +5,6 @@ import (
 	"github.com/go-ldap/ldap/v3"
 )
 
-func Groups(conn *ldap.Conn, baseDN string) (*ldap.SearchResult, error) {
-	filter := fmt.Sprintf("(&(objectClass=group))")
-	searchRequest := ldap.NewSearchRequest(
-		baseDN,
-		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
-		filter,
-		// []string{"mail", "memberOf"},
-		// []string{"cn"},
-		nil,
-		nil,
-	)
-	return conn.Search(searchRequest)
-}
-
 func Group(conn *ldap.Conn, baseDN string, groupName string) (*ldap.SearchResult, error) {
 	//
 	filter := fmt.Sprintf("(&(objectClass=group)(cn=%s))", ldap.EscapeFilter(groupName))

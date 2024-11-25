@@ -40,13 +40,11 @@ func ReadConfig(configPath string) (*Config, error) {
 	if configPath == "" {
 		var err error
 		configPath, err = defaultConfigFile()
-		fmt.Println(configPath)
 		if err != nil {
 			return &Config{}, fmt.Errorf("no config file found in %s", configPath)
 		}
 	}
 
-	fmt.Println(configPath)
 	f, err := os.Open(configPath)
 	if err != nil {
 		return &Config{}, fmt.Errorf("failed to read '%s': %v", configPath, err)

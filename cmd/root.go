@@ -13,6 +13,7 @@ import (
 
 	"github.com/timskovjacobsen/ldapget/client"
 	"github.com/timskovjacobsen/ldapget/config"
+	"github.com/timskovjacobsen/ldapget/layout"
 )
 
 var cfg *config.Config
@@ -57,31 +58,7 @@ func GroupsCommand() *cobra.Command {
 		Short: "List AD groups with related information",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			baseDN := cfg.Client.Search.RootDN
-			conn, err := client.BindToLdapServer(*cfg)
-			if err != nil {
-				log.Fatalf("failed to bind to ldap server: %v", err)
-			}
-			result, err := client.Groups(conn, baseDN)
-
-			if err != nil {
-				log.Fatalf("failed to search LDAP server for groups: %v", err)
-			}
-			if len(result.Entries) == 0 {
-				log.Fatalf("no groupds found")
-			}
-
-			var groupList []string
-			for _, entry := range result.Entries {
-				groupList = append(groupList, entry.GetAttributeValue("member"))
-			}
-			slices.Sort(groupList)
-
-			enumeratorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#646464"))
-			itemStyle := lipgloss.NewStyle().MarginLeft(1)
-			formattedList := list.New(groupList).ItemStyle(itemStyle).EnumeratorStyle(enumeratorStyle).Enumerator(Arabic)
-			fmt.Println(formattedList)
-
+			client.GroupsSearch(cfg)
 		},
 	}
 	return cmd
@@ -116,7 +93,7 @@ func GroupCommand() *cobra.Command {
 
 			enumeratorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#646464"))
 			itemStyle := lipgloss.NewStyle().MarginLeft(1)
-			formattedList := list.New(groupList).ItemStyle(itemStyle).EnumeratorStyle(enumeratorStyle).Enumerator(Arabic)
+			formattedList := list.New(groupList).ItemStyle(itemStyle).EnumeratorStyle(enumeratorStyle).Enumerator(layout.Arabic)
 			fmt.Println(formattedList)
 
 		},
@@ -164,7 +141,7 @@ func UserCommand() *cobra.Command {
 				itemStyle := lipgloss.NewStyle().MarginLeft(1)
 				enumeratorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#646464"))
 
-				groupList := list.New().ItemStyle(itemStyle).EnumeratorStyle(enumeratorStyle).Enumerator(Arabic)
+				groupList := list.New().ItemStyle(itemStyle).EnumeratorStyle(enumeratorStyle).Enumerator(layout.Arabic)
 				for _, attr := range entry.GetAttributeValues("memberOf") {
 					fields := strings.Split(attr, ",")
 					for _, field := range fields {
