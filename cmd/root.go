@@ -7,14 +7,14 @@ import (
 	"slices"
 	"strings"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/list"
 	"github.com/spf13/cobra"
-	"golang.org/x/term"
 
 	"github.com/timskovjacobsen/ldapget/client"
 	"github.com/timskovjacobsen/ldapget/config"
-	"github.com/timskovjacobsen/ldapget/layout"
+	"github.com/timskovjacobsen/ldapget/tui"
 )
 
 var cfg *config.Config
@@ -66,33 +66,34 @@ func GroupsCommand() *cobra.Command {
 				BorderForeground(lipgloss.Color("#cbba82")).
 				BorderTop(true).
 				BorderBottom(true)
-			var nameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#cbba82"))
+			// var nameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#cbba82"))
 
 			fmt.Println(headerStyle.Render("\nAD Groups Information:"))
-			separator := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#555555"))
-
-			width, _, _ := term.GetSize(int(os.Stderr.Fd()))
-			horizontalRule := separator.Render(strings.Repeat("─", width))
-			fmt.Println(horizontalRule)
-
+			fmt.Println(tui.Hrule())
+			formattedGroups := make([]string, len(groups))
 			for i, group := range groups {
-				fmt.Printf("%d. ", i+1)
-				fmt.Println(nameStyle.Render(fmt.Sprintf("%s", group.Name)))
-				fmt.Printf("   🗺️ %s\n", group.DN)
-				fmt.Printf("   🏷️ %s group\n", group.Kind)
-				if group.SystemCreated {
-					fmt.Printf("   System created: %s\n", "yes")
-				}
-				fmt.Printf("   🎯 %s scope\n", group.Scope)
-				if group.Description != "" {
-					fmt.Printf("   📝 %s\n", group.Description)
-				}
-				fmt.Printf("   👥 %d members\n", group.Members)
-				fmt.Println(horizontalRule)
+				formattedGroups[i] = tui.FormatGroup(group)
+
+				// fmt.Printf("%d. ", i+1)
+				// fmt.Println(nameStyle.Render(fmt.Sprintf("%s", group.Name)))
+				// fmt.Printf("   🗺️ %s\n", group.DN)
+				// fmt.Printf("   🏷️ %s group\n", group.Kind)
+				// if group.SystemCreated {
+				// 	fmt.Printf("   System created: %s\n", "yes")
+				// }
+				// fmt.Printf("   🎯 %s scope\n", group.Scope)
+				// if group.Description != "" {
+				// 	fmt.Printf("   📝 %s\n", group.Description)
+				// }
+				// fmt.Printf("   👥 %d members\n", group.Members)
+				// fmt.Println(tui.Hrule())
 			}
+			program := tea.NewProgram(tui.NewModel(formattedGroups), tea.WithAltScreen())
+			_, err := program.Run()
+			fmt.Println(err)
 		},
 	}
+	// return err
 	return cmd
 }
 
@@ -103,7 +104,7 @@ func GroupCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			group := args[0]
-			baseDN := cfg.Client.Search.RootDN
+			baseDN := cfg.Client.Search.BaseDN
 			conn, err := client.BindToLdapServer(*cfg)
 			if err != nil {
 				log.Fatalf("failed to bind to ldap server: %v", err)
@@ -125,7 +126,7 @@ func GroupCommand() *cobra.Command {
 
 			enumeratorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#646464"))
 			itemStyle := lipgloss.NewStyle().MarginLeft(1)
-			formattedList := list.New(groupList).ItemStyle(itemStyle).EnumeratorStyle(enumeratorStyle).Enumerator(layout.Arabic)
+			formattedList := list.New(groupList).ItemStyle(itemStyle).EnumeratorStyle(enumeratorStyle).Enumerator(tui.Arabic)
 			fmt.Println(formattedList)
 
 		},
@@ -140,7 +141,7 @@ func UserCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			user := args[0]
-			baseDN := cfg.Client.Search.RootDN
+			baseDN := cfg.Client.Search.BaseDN
 			conn, err := client.BindToLdapServer(*cfg)
 			if err != nil {
 				log.Fatalf("failed to bind to ldap server: %v", err)
@@ -173,7 +174,7 @@ func UserCommand() *cobra.Command {
 				itemStyle := lipgloss.NewStyle().MarginLeft(1)
 				enumeratorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#646464"))
 
-				groupList := list.New().ItemStyle(itemStyle).EnumeratorStyle(enumeratorStyle).Enumerator(layout.Arabic)
+				groupList := list.New().ItemStyle(itemStyle).EnumeratorStyle(enumeratorStyle).Enumerator(tui.Arabic)
 				for _, attr := range entry.GetAttributeValues("memberOf") {
 					fields := strings.Split(attr, ",")
 					for _, field := range fields {
@@ -192,6 +193,34 @@ func UserCommand() *cobra.Command {
 }
 
 func init() {
+	var tuiCmd = &cobra.Command{
+		Use:   "tui",
+		Short: "Tui",
+		Args:  cobra.ExactArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			groups := client.Groups(cfg)
+
+			// var headerStyle = lipgloss.NewStyle().
+			// 	BorderStyle(lipgloss.RoundedBorder()).
+			// 	BorderForeground(lipgloss.Color("#cbba82")).
+			// 	BorderTop(true).
+			// 	BorderBottom(true)
+			// var nameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#cbba82"))
+
+			// fmt.Println(headerStyle.Render("\nAD Groups Information:"))
+			// fmt.Println(tui.Hrule())
+			formattedGroups := make([]string, len(groups))
+			for i, group := range groups {
+				formattedGroups[i] = tui.FormatGroup(group)
+			}
+			program := tea.NewProgram(tui.NewModel(formattedGroups), tea.WithAltScreen())
+			_, err := program.Run()
+			if err != nil {
+				fmt.Println(err)
+			}
+		},
+	}
+	rootCmd.AddCommand(tuiCmd)
 	rootCmd.AddCommand(GroupsCommand())
 	rootCmd.AddCommand(GroupCommand())
 	rootCmd.AddCommand(UserCommand())

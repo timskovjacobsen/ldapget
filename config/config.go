@@ -16,7 +16,7 @@ type LdapServer struct {
 }
 
 type Search struct {
-	RootDN string `toml:"root_dn"`
+	BaseDN string `toml:"base_dn"`
 }
 
 type Client struct {

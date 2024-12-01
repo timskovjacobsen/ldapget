@@ -15,7 +15,6 @@ func BindToLdapServer(cfg config.Config) (*ldap.Conn, error) {
 		return nil, fmt.Errorf("failed to connect to LDAP server: %v", err)
 	}
 
-	// Bind with a read-only user
 	err = conn.Bind(cfg.LdapServer.Username, cfg.LdapServer.Password)
 	if err != nil {
 		return nil, fmt.Errorf("failed to bind to LDAP server: %v", err)

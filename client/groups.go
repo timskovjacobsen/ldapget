@@ -16,7 +16,7 @@ type GroupInfo struct {
 	DN            string // Distinguished Name, i.e. the locaiton of the group
 	SystemCreated bool   // whether group is created by the system or not
 	Scope         string // "DomainLocal", "Global", or "Universal"
-	Kind          string // "Security" or "Distribution"
+	Type          string // "Security" or "Distribution"
 	Description   string
 	Members       int // members count
 }
@@ -85,7 +85,7 @@ func GroupsRequest(conn *ldap.Conn, baseDN string) (*ldap.SearchResult, error) {
 
 // Return a list of groups with all relevant info attached
 func Groups(cfg *config.Config) []GroupInfo {
-	baseDN := cfg.Client.Search.RootDN
+	baseDN := cfg.Client.Search.BaseDN
 	conn, err := BindToLdapServer(*cfg)
 	if err != nil {
 		log.Fatalf("failed to bind to ldap server: %v", err)
@@ -107,7 +107,7 @@ func Groups(cfg *config.Config) []GroupInfo {
 			Name:          entry.GetAttributeValue("cn"),
 			DN:            entry.GetAttributeValue("distinguishedName"),
 			Scope:         scope,
-			Kind:          kind,
+			Type:          kind,
 			SystemCreated: isSystem,
 			Description:   entry.GetAttributeValue("description"),
 			Members:       len(entry.GetAttributeValues("member")),

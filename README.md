@@ -10,5 +10,5 @@ username = "some-user"
 password = "..."
 
 [client.search]
-root_dn = "DC=company,DC=com"
+base_dn = "DC=company,DC=com"
 ```
