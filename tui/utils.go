@@ -23,7 +23,8 @@ func (m *Model) ensureVisible() {
 func (m *Model) search() {
 	term := strings.ToLower(m.SearchTerm)
 	for i, group := range m.Groups {
-		if strings.Contains(strings.ToLower(group), term) {
+		// NOTE: only searches in group names for now!
+		if strings.Contains(strings.ToLower(group.Name), term) {
 			m.Cursor = i
 			m.ensureVisible()
 			m.StatusMsg = ""
@@ -40,7 +41,8 @@ func FormatGroup(group client.GroupInfo) string {
 🎯 %s scope
 📝 %s
 👥 %d members
-%s`,
+%s
+`,
 		group.Name,
 		group.DN,
 		group.Type,

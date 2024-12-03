@@ -4,10 +4,15 @@ import (
 	"github.com/charmbracelet/bubbles/paginator"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/timskovjacobsen/ldapget/client"
+	"github.com/timskovjacobsen/ldapget/config"
 )
 
 type Model struct {
-	Groups     []string
+	Tabs       []string
+	TabContent [][]string
+	ActiveTab  int
+	Groups     []client.GroupInfo
 	Viewport   viewport
 	Paginator  paginator.Model
 	Cursor     int
@@ -27,22 +32,31 @@ var (
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(lipgloss.Color("87"))
-
-	// separatorStyle = lipgloss.NewStyle().
-	// Foreground(lipgloss.Color("240"))
-
 	highlightStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("137")).
 			Bold(true)
 )
 
-func NewModel(groups []string) *Model {
+func NewModel(cfg *config.Config) *Model {
+
+	tabs := []string{"Groups", "Users"}
+	groups := client.Groups(cfg)
+	var groupsContent []string
+	for _, group := range groups {
+		groupsContent = append(groupsContent, FormatGroup(group))
+	}
+	tabContent := [][]string{groupsContent, {"Users"}}
+
 	p := paginator.New()
-	p.Type = paginator.Arabic // Using numbers instead of dots since we have more content
-	p.PerPage = 6             // Show 5 LDAP entries per page
+	p.Type = paginator.Arabic
+	p.PerPage = 5
 	p.SetTotalPages(len(groups))
+
 	return &Model{
-		Groups:    groups,
-		Paginator: p,
+		Tabs:       tabs,
+		TabContent: tabContent,
+		ActiveTab:  0,
+		Groups:     groups,
+		Paginator:  p,
 	}
 }
