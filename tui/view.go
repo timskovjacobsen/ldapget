@@ -5,35 +5,11 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/timskovjacobsen/ldapget/style"
 	"golang.org/x/term"
 )
 
-func tabBorderWithBottom(left, middle, right string) lipgloss.Border {
-	border := lipgloss.RoundedBorder()
-	border.BottomLeft = left
-	border.Bottom = middle
-	border.BottomRight = right
-	return border
-}
-
-var (
-	w, h, _           = term.GetSize(int(os.Stderr.Fd()))
-	inactiveTabBorder = tabBorderWithBottom("┴", "─", "┴")
-	activeTabBorder   = tabBorderWithBottom("┘", " ", "└")
-	highlightColor    = lipgloss.AdaptiveColor{Light: "#874BFD", Dark: "#7D56F4"}
-	inactiveTabStyle  = lipgloss.NewStyle().Border(inactiveTabBorder, true).BorderForeground(highlightColor).Padding(0, 1)
-	activeTabStyle    = inactiveTabStyle.Border(activeTabBorder, true)
-	contentStyle      = lipgloss.NewStyle().
-				BorderStyle(lipgloss.NormalBorder()).
-				BorderForeground(lipgloss.Color("240")).
-				Padding(1, 2)
-	windowStyle = lipgloss.NewStyle().
-			BorderForeground(highlightColor).
-			Padding(2, 0).
-			Align(lipgloss.Center).
-			Border(lipgloss.NormalBorder()).
-			UnsetBorderTop()
-)
+var w, h, _ = term.GetSize(int(os.Stderr.Fd()))
 
 func (m *Model) View() string {
 
@@ -82,11 +58,11 @@ func (m *Model) View() string {
 
 	var tabs []string
 	for i, tab := range m.Tabs {
-		style := inactiveTabStyle
+		tabStyle := style.InactiveTab
 		if i == m.ActiveTab {
-			style = activeTabStyle
+			tabStyle = style.ActiveTab
 		}
-		tabs = append(tabs, style.Render(tab))
+		tabs = append(tabs, tabStyle.Render(tab))
 	}
 	b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, tabs...))
 	b.WriteString("\n")
@@ -100,20 +76,20 @@ func (m *Model) View() string {
 		// Render entries
 		var content strings.Builder
 		for i, group := range visibleGroups {
-			style := lipgloss.NewStyle()
+			itemStyle := lipgloss.NewStyle()
 
 			if i == m.Cursor {
-				style = highlightStyle
+				itemStyle = style.Highlight
 			}
-			content.WriteString(style.Render(FormatGroup(group)))
+			content.WriteString(itemStyle.Render(FormatGroup(group)))
 			content.WriteString("\n")
 		}
 		content.WriteString("  " + m.Paginator.View() + "\n")
 		content.WriteString("\n  h/l ←/→: change page • q: quit\n")
 
 		// Render content in content area
-		b.WriteString(contentStyle.Width(width).Height(height).Render(content.String()))
+		b.WriteString(style.Content.Width(width).Height(height).Render(content.String()))
 	}
 
-	return windowStyle.Width(w - 10).Height(h - 545).Render(b.String())
+	return style.Window.Width(w - 10).Height(h - 545).Render(b.String())
 }

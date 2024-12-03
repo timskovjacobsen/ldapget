@@ -3,39 +3,35 @@ package tui
 import (
 	"github.com/charmbracelet/bubbles/paginator"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/timskovjacobsen/ldapget/client"
 	"github.com/timskovjacobsen/ldapget/config"
 )
 
 type Model struct {
-	Tabs       []string
-	TabContent [][]string
-	ActiveTab  int
-	Groups     []client.GroupInfo
-	Viewport   viewport
-	Paginator  paginator.Model
-	Cursor     int
-	WindowSize tea.WindowSizeMsg
-	SearchMode bool
-	SearchTerm string
-	StatusMsg  string
+	Tabs           []string
+	TabContent     [][]string
+	ActiveTab      int
+	Groups         []client.GroupInfo
+	Paginator      paginator.Model
+	Cursor         int
+	WindowSize     tea.WindowSizeMsg
+	SearchMode     bool
+	SearchTerm     string
+	StatusMsg      string
+	GroupMembers   []client.UserInfo
+	ViewingMembers bool
 }
 
-type viewport struct {
-	Top    int
-	Height int
+type fetchMembersMsg struct {
+	Members []client.UserInfo
 }
 
-// Styles
-var (
-	titleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("87"))
-	highlightStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("137")).
-			Bold(true)
-)
+func fetchMembers(group client.GroupInfo, cfg *config.Config) tea.Cmd {
+	return func() tea.Msg {
+		members, _ := client.GroupMembers(group.Name, cfg)
+		return fetchMembersMsg{Members: members}
+	}
+}
 
 func NewModel(cfg *config.Config) *Model {
 

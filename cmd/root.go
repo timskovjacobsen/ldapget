@@ -69,7 +69,7 @@ func GroupsCommand() *cobra.Command {
 			// var nameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#cbba82"))
 
 			fmt.Println(headerStyle.Render("\nAD Groups Information:"))
-			fmt.Println(tui.Hrule())
+			fmt.Println(tui.Hrule("#555555"))
 			formattedGroups := make([]string, len(groups))
 			for i, group := range groups {
 				formattedGroups[i] = tui.FormatGroup(group)
@@ -104,31 +104,20 @@ func GroupCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			group := args[0]
-			baseDN := cfg.Client.Search.BaseDN
-			conn, err := client.BindToLdapServer(*cfg)
-			if err != nil {
-				log.Fatalf("failed to bind to ldap server: %v", err)
-			}
-			result, err := client.Group(conn, baseDN, group)
-
+			usersResult, err := client.GroupMembers(group, cfg)
 			if err != nil {
 				log.Fatalf("Failed to search LDAP server for group: %v", err)
 			}
-			if len(result.Entries) == 0 {
-				log.Fatalf("Group not found")
+			var members []string
+			for _, user := range usersResult {
+				members = append(members, user.Name)
 			}
-
-			var groupList []string
-			for _, entry := range result.Entries {
-				groupList = append(groupList, entry.GetAttributeValue("cn"))
-			}
-			slices.Sort(groupList)
+			slices.Sort(members)
 
 			enumeratorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#646464"))
 			itemStyle := lipgloss.NewStyle().MarginLeft(1)
-			formattedList := list.New(groupList).ItemStyle(itemStyle).EnumeratorStyle(enumeratorStyle).Enumerator(tui.Arabic)
+			formattedList := list.New(members).ItemStyle(itemStyle).EnumeratorStyle(enumeratorStyle).Enumerator(tui.Arabic)
 			fmt.Println(formattedList)
-
 		},
 	}
 	return cmd
