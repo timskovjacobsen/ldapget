@@ -12,47 +12,7 @@ import (
 var w, h, _ = term.GetSize(int(os.Stderr.Fd()))
 
 func (m *Model) View() string {
-
-	// doc := strings.Builder{}
-
-	// var renderedTabs []string
-
-	// for i, t := range m.Tabs {
-	// 	var style lipgloss.Style
-	// 	isFirst, isLast, isActive := i == 0, i == len(m.Tabs)-1, i == m.ActiveTab
-	// 	if isActive {
-	// 		style = activeTabStyle
-	// 	} else {
-	// 		style = inactiveTabStyle
-	// 	}
-	// 	border, _, _, _, _ := style.GetBorder()
-	// 	if isFirst && isActive {
-	// 		border.BottomLeft = "│"
-	// 	} else if isFirst && !isActive {
-	// 		border.BottomLeft = "├"
-	// 	} else if isLast && isActive {
-	// 		border.BottomRight = "│"
-	// 	} else if isLast && !isActive {
-	// 		border.BottomRight = "┤"
-	// 	}
-	// 	style = style.Border(border)
-	// 	renderedTabs = append(renderedTabs, style.Render(t))
-	// }
-
-	// row := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
-
-	// contentWidth := w - 4
-	// contentStyle := lipgloss.NewStyle().
-	// 	BorderStyle(lipgloss.NormalBorder()).
-	// 	BorderForeground(lipgloss.Color("240")).
-	// 	Padding(1, 2)
-	// renderedContent := contentStyle.Width(contentWidth).Render()
-
-	// doc.WriteString(row)
-	// doc.WriteString("\n")
-
 	var b strings.Builder
-
 	height := m.WindowSize.Height - 6
 	width := m.WindowSize.Width - 4
 
@@ -76,20 +36,21 @@ func (m *Model) View() string {
 		// Render entries
 		var content strings.Builder
 		for i, group := range visibleGroups {
-			itemStyle := lipgloss.NewStyle()
+			var itemStyle = style.InactiveItem
 
 			if i == m.Cursor {
-				itemStyle = style.Highlight
+				itemStyle = style.ActiveItem
 			}
-			content.WriteString(itemStyle.Render(FormatGroup(group)))
+			content.WriteString(itemStyle.Render(FormatGroup(group, m.WindowSize.Width)))
+			content.WriteString(Hrule("#555555", m.WindowSize.Width-16))
 			content.WriteString("\n")
 		}
 		content.WriteString("  " + m.Paginator.View() + "\n")
 		content.WriteString("\n  h/l ←/→: change page • q: quit\n")
 
 		// Render content in content area
-		b.WriteString(style.Content.Width(width).Height(height).Render(content.String()))
+		b.WriteString(style.Content.Width(width).Height(height).UnsetAlign().Align(lipgloss.Left).Render(content.String()))
 	}
 
-	return style.Window.Width(w - 10).Height(h - 545).Render(b.String())
+	return style.Window.Width(w).Height(h).Render(b.String())
 }

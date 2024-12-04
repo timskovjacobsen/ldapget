@@ -69,10 +69,10 @@ func GroupsCommand() *cobra.Command {
 			// var nameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#cbba82"))
 
 			fmt.Println(headerStyle.Render("\nAD Groups Information:"))
-			fmt.Println(tui.Hrule("#555555"))
+			fmt.Println(tui.Hrule("#555555", 80))
 			formattedGroups := make([]string, len(groups))
 			for i, group := range groups {
-				formattedGroups[i] = tui.FormatGroup(group)
+				formattedGroups[i] = tui.FormatGroup(group, 80)
 
 				// fmt.Printf("%d. ", i+1)
 				// fmt.Println(nameStyle.Render(fmt.Sprintf("%s", group.Name)))

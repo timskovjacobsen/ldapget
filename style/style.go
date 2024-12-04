@@ -16,25 +16,33 @@ var (
 	ItemTitle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(lipgloss.Color("#cbba82"))
-	Highlight = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("137")).
+	ActiveItem = lipgloss.NewStyle().
+			Border(lipgloss.Border{Left: "│"}).
+			BorderForeground(lipgloss.Color("99")).
+			Align(lipgloss.Left).
 			Bold(true)
-	NotSet = lipgloss.NewStyle().
+	InactiveItem = lipgloss.NewStyle().
+			Border(lipgloss.Border{Left: " "}).
+			BorderForeground(lipgloss.Color("1")). // there must be a color here in order for left-alignment to work, no idea why
+			Align(lipgloss.Left)
+
+	NotSet = lipgloss.NewStyle(). // for entries with no value, e.g. group description
 		Italic(true).
 		Foreground(lipgloss.Color("#3C3C3C"))
 	HighlightColor    = lipgloss.AdaptiveColor{Light: "#874BFD", Dark: "#7D56F4"}
 	InactiveTabBorder = tabBorderWithBottom("┴", "─", "┴")
 	ActiveTabBorder   = tabBorderWithBottom("┘", " ", "└")
-	InactiveTab       = lipgloss.NewStyle().Border(InactiveTabBorder, true).BorderForeground(HighlightColor).Padding(0, 1)
-	ActiveTab         = InactiveTab.Border(ActiveTabBorder, true)
-	Content           = lipgloss.NewStyle().
-				BorderStyle(lipgloss.NormalBorder()).
-				BorderForeground(lipgloss.Color("240")).
-				Padding(1, 2)
+	InactiveTab       = lipgloss.NewStyle().
+				Border(InactiveTabBorder, true).
+				BorderForeground(HighlightColor).
+				Padding(0, 1)
+	ActiveTab = InactiveTab.Border(ActiveTabBorder, true)
+	Content   = lipgloss.NewStyle().
+			Align(lipgloss.Left).
+			UnsetAlign().
+			Padding(1, 2)
 	Window = lipgloss.NewStyle().
-		BorderForeground(HighlightColor).
-		Padding(2, 0).
-		Align(lipgloss.Center).
-		Border(lipgloss.NormalBorder()).
+		Padding(0, 0).
+		Align(lipgloss.Left).
 		UnsetBorderTop()
 )

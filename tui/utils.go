@@ -64,28 +64,28 @@ func GroupHeight(group client.GroupInfo, maxWidth int) int {
 	return 3 + descrLines
 }
 
-func FormatGroup(group client.GroupInfo) string {
+func FormatGroup(group client.GroupInfo, width int) string {
 	var b strings.Builder
 
-	width := 80
+	indent := 4 // when lines are wrapped, use this indent
+
 	membersTxt := fmt.Sprintf("👥 %d members", group.MemberCount)
-
-	padCount := width - len(group.Name) - len(membersTxt)
-	padding := strings.Repeat(" ", padCount)
-
 	groupNameTxt := style.ItemTitle.Render(group.Name)
+
+	padCount := width - len(groupNameTxt) - len(membersTxt)
+	padding := strings.Repeat(" ", max(padCount, 0))
+
 	b.WriteString(fmt.Sprintf("%s %s %s\n", groupNameTxt, padding, membersTxt))
-	wrappedDN := wordWrap(group.DN, width, 3)
-	b.WriteString(fmt.Sprintf("🗺️ %s\n", wrappedDN))
+	wrappedDN := wordWrap(group.DN, width-4*indent, indent)
+	b.WriteString(fmt.Sprintf(" 🗺️ %s\n", wrappedDN))
 	var description string
 	if len(group.Description) == 0 {
 		description = style.NotSet.Render("no description")
 	} else {
-		description = wordWrap(group.Description, width, 3)
+		description = wordWrap(group.Description, width-4*indent, indent)
 	}
-	b.WriteString(fmt.Sprintf("📝 %s\n", description))
-	b.WriteString(fmt.Sprintf("🏷️ %s group\n", group.Type))
-	b.WriteString(fmt.Sprintf("🎯 %s scope\n", group.Scope))
-	b.WriteString(Hrule("#555555"))
+	b.WriteString(fmt.Sprintf(" 📝 %s\n", description))
+	b.WriteString(fmt.Sprintf(" 🏷️ %s group\n", group.Type))
+	b.WriteString(fmt.Sprintf(" 🎯 %s scope", group.Scope))
 	return b.String()
 }
