@@ -12,6 +12,10 @@ func tabBorderWithBottom(left, middle, right string) lipgloss.Border {
 	return border
 }
 
+const (
+	GREY = "#545454"
+)
+
 var (
 	ItemTitle = lipgloss.NewStyle().
 			Bold(true).
@@ -28,7 +32,7 @@ var (
 
 	NotSet = lipgloss.NewStyle(). // for entries with no value, e.g. group description
 		Italic(true).
-		Foreground(lipgloss.Color("#3C3C3C"))
+		Foreground(lipgloss.Color(GREY))
 	HighlightColor    = lipgloss.AdaptiveColor{Light: "#874BFD", Dark: "#7D56F4"}
 	InactiveTabBorder = tabBorderWithBottom("┴", "─", "┴")
 	ActiveTabBorder   = tabBorderWithBottom("┘", " ", "└")
@@ -45,4 +49,10 @@ var (
 		Padding(0, 0).
 		Align(lipgloss.Left).
 		UnsetBorderTop()
+	SecondaryText = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(GREY))
+	Controls = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(GREY))
+	Enumerate = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(GREY))
 )

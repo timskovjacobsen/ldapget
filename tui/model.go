@@ -11,6 +11,7 @@ import (
 )
 
 type Model struct {
+	Config         *config.Config
 	Tabs           []string
 	TabContent     [][]string
 	ActiveTab      int
@@ -22,18 +23,12 @@ type Model struct {
 	SearchTerm     string
 	StatusMsg      string
 	GroupMembers   []client.UserInfo
+	SelectedGroup  *client.GroupInfo
 	ViewingMembers bool
-}
-
-type fetchMembersMsg struct {
-	Members []client.UserInfo
-}
-
-func fetchMembers(group client.GroupInfo, cfg *config.Config) tea.Cmd {
-	return func() tea.Msg {
-		members, _ := client.GroupMembers(group.Name, cfg)
-		return fetchMembersMsg{Members: members}
-	}
+	ViewingGroups  bool
+	IsSearching    bool
+	FilteredGroups []client.GroupInfo
+	SearchInput    string
 }
 
 func NewModel(cfg *config.Config) *Model {
@@ -53,11 +48,13 @@ func NewModel(cfg *config.Config) *Model {
 	p.SetTotalPages(len(groups))
 
 	return &Model{
-		Tabs:       tabs,
-		TabContent: tabContent,
-		ActiveTab:  0,
-		Groups:     groups,
-		Paginator:  p,
-		WindowSize: tea.WindowSizeMsg{Width: w, Height: h},
+		Config:        cfg,
+		Tabs:          tabs,
+		TabContent:    tabContent,
+		ActiveTab:     0,
+		Groups:        groups,
+		Paginator:     p,
+		WindowSize:    tea.WindowSizeMsg{Width: w, Height: h},
+		ViewingGroups: true,
 	}
 }
