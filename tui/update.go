@@ -43,99 +43,40 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
-	case fetchMembersMsg:
-		m.GroupMembers = msg.Members
-		return m, nil
+	// case fetchMembersMsg:
+	// m.GroupMembers = msg.Members
+	// return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "q", "ctrl+c":
+		case "ctrl+c": // quit action is common for all TUI views
 			return m, tea.Quit
-
-		case "up", "k":
-			if m.Cursor > 0 {
-				m.Cursor--
+		case "q":
+			if !m.IsSearching { // typing "q" in interactive search shouldn't quit
+				return m, tea.Quit
 			}
-			return m, nil
 
-		case "down", "j":
-			start, end := m.Paginator.GetSliceBounds(len(m.Groups))
-			currentPageEntries := m.Groups[start:end]
-			if m.Cursor < len(currentPageEntries)-1 {
-				m.Cursor++
-			}
-			return m, nil
-
-		case "right", "l":
-			if m.Paginator.Page != m.Paginator.TotalPages-1 {
-				m.Cursor = 0 // Reset cursor when changing pages
-				m.Paginator.NextPage()
-			}
-			return m, nil
-
-		case "left", "h":
-			if m.Paginator.Page != 0 {
-				m.Cursor = 0 // Reset cursor when changing pages
-				m.Paginator.PrevPage()
-			}
-			return m, nil
-
-		case "ctrl+left", "ctrl+h":
-			m.ActiveTab = max(m.ActiveTab-1, 0)
-			return m, nil
-		case "ctrl+right", "ctrl+l":
-			m.ActiveTab = min(m.ActiveTab+1, len(m.Tabs)-1)
-			return m, nil
+		// Entering search must be handled first, so we're not rendering the "/"
 		case "/":
 			if !m.IsSearching {
 				m.IsSearching = true
+				m.ViewingGroups = false
+				m.ViewingMembers = false
 				m.SearchInput = ""
 				m.filterGroups()
-			}
-			return m, nil
-		case "b", "esc":
-			if m.ViewingMembers {
-				// Return to group list
-				m.ViewingMembers = false
-				// m.SelectedGroup = nil
-				m.ViewingGroups = true
 				return m, nil
 			}
-			if m.IsSearching {
-				// Reset filter
-				m.IsSearching = false
-				m.SearchInput = ""
-				m.FilteredGroups = m.Groups
-				m.Paginator.SetTotalPages(len(m.FilteredGroups))
-			}
-		case "enter":
-			if m.ViewingGroups && len(m.Groups) > 0 {
-				start, end := m.Paginator.GetSliceBounds(len(m.Groups))
-				visibleGroups := m.Groups[start:end]
-				if m.Cursor < len(visibleGroups) {
-					m.SelectedGroup = &visibleGroups[m.Cursor]
-					m.ViewingMembers = true
-					m.ViewingGroups = false
-					return m, fetchMembers(m.SelectedGroup, m.Config)
-				}
-			}
+		}
+		// Apply controls based on what TUI view is currently active
+		if m.ViewingGroups {
+			m.SetGroupsViewControls(msg)
+		}
+		if m.ViewingMembers {
+			m.SetMemberViewControls(msg)
+			// m.fetchMembersSane()
+			// return m, fetchMembers(m.SelectedGroup, m.Config)
 		}
 		if m.IsSearching {
-			switch msg.Type {
-			case tea.KeyBackspace:
-				// User is deleting a char from the search input
-				if len(m.SearchInput) > 0 {
-					m.SearchInput = m.SearchInput[:len(m.SearchInput)-1]
-					m.filterGroups()
-				}
-			case tea.KeyRunes:
-				// User is typing a char into the search input
-				m.SearchInput += string(msg.Runes)
-				m.filterGroups()
-
-			case tea.KeySpace: // Space key must be handled separately
-				m.SearchInput += " "
-				m.filterGroups()
-			}
+			m.SetSearchControls(msg)
 		}
 	}
 

@@ -19,10 +19,7 @@ type Model struct {
 	Paginator      paginator.Model
 	Cursor         int
 	WindowSize     tea.WindowSizeMsg
-	SearchMode     bool
-	SearchTerm     string
 	StatusMsg      string
-	GroupMembers   []client.UserInfo
 	SelectedGroup  *client.GroupInfo
 	ViewingMembers bool
 	ViewingGroups  bool

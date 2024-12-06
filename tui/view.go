@@ -50,6 +50,7 @@ func formatMemberList(members []client.UserInfo) string {
 	return builder.String()
 }
 
+// Return a styled view of the members in the selected group
 func (m *Model) renderMembersView() string {
 	var b strings.Builder
 
@@ -58,14 +59,15 @@ func (m *Model) renderMembersView() string {
 	b.WriteString(style.ItemTitle.Render(header))
 	b.WriteString("\n\n")
 
-	if len(m.GroupMembers) == 0 {
+	members, _ := client.GroupMembers(m.SelectedGroup.Name, m.Config)
+	if len(members) == 0 {
 		b.WriteString("No members found\n")
 	} else {
-		b.WriteString(formatMemberList(m.GroupMembers))
+		b.WriteString(formatMemberList(members))
 	}
 
 	// Add controls help
-	b.WriteString(style.Controls.Render("\n  • b/esc: return to groups  • q: quit"))
+	b.WriteString(GroupMembersViewControls)
 
 	// Wrap in the same content style as groups
 	contentWidth := min(m.WindowSize.Width-4, m.WindowSize.Width+4)
@@ -107,7 +109,9 @@ func (m *Model) View() string {
 				controls = GroupsViewControls
 			}
 			// Get the entries for the current page
+			m.Paginator.SetTotalPages(len(groupList))
 			start, end := m.Paginator.GetSliceBounds(len(groupList))
+
 			visibleGroups := groupList[start:end]
 
 			content.WriteString(style.SecondaryText.Render(fmt.Sprintf("Showing %d groups\n", len(groupList))))

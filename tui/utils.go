@@ -8,19 +8,6 @@ import (
 	"github.com/timskovjacobsen/ldapget/style"
 )
 
-func (m *Model) search() {
-	term := strings.ToLower(m.SearchTerm)
-	for i, group := range m.Groups {
-		// NOTE: only searches in group names for now!
-		if strings.Contains(strings.ToLower(group.Name), term) {
-			m.Cursor = i
-			m.StatusMsg = ""
-			return
-		}
-	}
-	m.StatusMsg = "Not Found: " + m.SearchTerm
-}
-
 func truncateOrPad(s string, width int) string {
 	if len(s) > width {
 		return s[:width-3] + ">" // continuation char
