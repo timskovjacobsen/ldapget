@@ -29,6 +29,9 @@ type Model struct {
 	Groups         []client.GroupInfo
 	FilteredGroups []client.GroupInfo
 	SelectedGroup  *client.GroupInfo
+	Users          []client.UserInfo
+	FilteredUsers  []client.UserInfo
+	SelectedUser   *client.UserInfo
 	Paginator      paginator.Model
 	Cursor         int
 	WindowSize     tea.WindowSizeMsg
@@ -52,7 +55,7 @@ func NewModel(cfg *config.Config) *Model {
 
 	w, h, _ := term.GetSize(int(os.Stderr.Fd()))
 	tabs := []string{"Groups", "Users"}
-	groups := client.Groups(cfg)
+	groups := client.Groups(cfg) // By default we show all groups
 	var groupsContent []string
 	for _, group := range groups {
 		groupsContent = append(groupsContent, FormatGroup(group, w))

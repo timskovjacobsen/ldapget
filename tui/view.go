@@ -123,6 +123,52 @@ func (m *Model) renderGroupsView(b *strings.Builder) string {
 	return b.String()
 }
 
+func (m *Model) renderUsersView(b *strings.Builder) string {
+	height := m.WindowSize.Height - 6
+	width := m.WindowSize.Width - 4
+	var content strings.Builder
+	var userList []client.UserInfo
+	var controls string
+	if m.TUIState == SearchingUsers {
+		input := style.ItemTitle.Render(fmt.Sprintf("%s", m.SearchInput))
+		content.WriteString(fmt.Sprintf("Search: %s_\n\n", input))
+		userList = m.FilteredUsers
+		controls = SearchViewControls
+	} else {
+		content.WriteString("\n\n")
+		userList = m.Users
+		controls = GroupsViewControls
+	}
+	// Get the entries for the current page
+	m.Paginator.SetTotalPages(len(userList))
+	start, end := m.Paginator.GetSliceBounds(len(userList))
+
+	// NOTE: There are some weird cases where [start:end] comes out something like
+	// [10:0], which makes no sense. We'll handle it here to avoid a crash
+	if start > end {
+		start, end = 0, 0
+	}
+	content.WriteString(style.SecondaryText.Render(fmt.Sprintf("Showing %d groups\n", len(userList))))
+	// Render visible entries given by pager
+	for i, user := range userList[start:end] {
+		var itemStyle = style.InactiveItem
+
+		if i == m.Cursor {
+			itemStyle = style.ActiveItem
+		}
+		// TODO: create a FormatUser function, like for groups
+		content.WriteString(itemStyle.Render(user.Name))
+		content.WriteString(Hrule("#555555", m.WindowSize.Width-16))
+		content.WriteString("\n")
+	}
+	content.WriteString("  " + m.Paginator.View() + "\n")
+	content.WriteString(controls)
+
+	// Render content in content area
+	b.WriteString(style.Content.Width(width).Height(height).UnsetAlign().Align(lipgloss.Left).Render(content.String()))
+	return b.String()
+}
+
 func (m *Model) View() string {
 	var b strings.Builder
 
@@ -138,6 +184,13 @@ func (m *Model) View() string {
 	b.WriteString("\n")
 
 	if m.ActiveTab == 0 { // Groups tab
+		if m.Groups == nil {
+			// The groups are loaded by defualt when the TUI starts, but we might have
+			// cleared them from memory during the lifetime of the TUI, we'll fetch
+			// them again
+			m.Groups = client.Groups(m.Config)
+		}
+		// Render the appropriate view
 		if m.TUIState == ViewingGroupMembers {
 			return m.renderMembersView() // note: tabs are not shown here
 		} else {
@@ -145,6 +198,9 @@ func (m *Model) View() string {
 			return m.renderGroupsView(&b)
 		}
 	} else if m.ActiveTab == 1 { // Users tab
+		if m.Users == nil { // fetch users if we haven't yet
+			m.Users = client.Users(m.config)
+		}
 		if m.TUIState == ViewingUsers {
 			return m.renderUsersView()
 		}
