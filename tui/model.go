@@ -10,22 +10,42 @@ import (
 	"golang.org/x/term"
 )
 
+// Represent viewing states of the TUI (mutually exclusive)
+type ViewState int
+
+const (
+	ViewingGroups ViewState = iota
+	ViewingGroupMembers
+	SearchingGroups
+	ViewingUsers
+	ViewingUserGroups
+	SearchingUsers
+)
+
 type Model struct {
 	Config         *config.Config
 	Tabs           []string
-	TabContent     [][]string
 	ActiveTab      int
 	Groups         []client.GroupInfo
+	FilteredGroups []client.GroupInfo
+	SelectedGroup  *client.GroupInfo
 	Paginator      paginator.Model
 	Cursor         int
 	WindowSize     tea.WindowSizeMsg
-	StatusMsg      string
-	SelectedGroup  *client.GroupInfo
-	ViewingMembers bool
-	ViewingGroups  bool
-	IsSearching    bool
-	FilteredGroups []client.GroupInfo
+	TUIState       ViewState
 	SearchInput    string
+	// StatusMsg      string
+}
+
+// Return true if the current TUI state is a type of searching state
+func (m *Model) IsSearching() bool {
+	if m.TUIState == SearchingGroups {
+		return true
+	}
+	if m.TUIState == SearchingUsers {
+		return true
+	}
+	return false
 }
 
 func NewModel(cfg *config.Config) *Model {
@@ -37,7 +57,6 @@ func NewModel(cfg *config.Config) *Model {
 	for _, group := range groups {
 		groupsContent = append(groupsContent, FormatGroup(group, w))
 	}
-	tabContent := [][]string{groupsContent, {"Users"}}
 
 	p := paginator.New()
 	p.Type = paginator.Arabic
@@ -45,13 +64,12 @@ func NewModel(cfg *config.Config) *Model {
 	p.SetTotalPages(len(groups))
 
 	return &Model{
-		Config:        cfg,
-		Tabs:          tabs,
-		TabContent:    tabContent,
-		ActiveTab:     0,
-		Groups:        groups,
-		Paginator:     p,
-		WindowSize:    tea.WindowSizeMsg{Width: w, Height: h},
-		ViewingGroups: true,
+		Config:     cfg,
+		Tabs:       tabs,
+		ActiveTab:  0,
+		Groups:     groups,
+		Paginator:  p,
+		WindowSize: tea.WindowSizeMsg{Width: w, Height: h},
+		TUIState:   ViewingGroups,
 	}
 }

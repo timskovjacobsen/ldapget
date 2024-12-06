@@ -74,10 +74,57 @@ func (m *Model) renderMembersView() string {
 	return style.Content.Width(contentWidth).Render(b.String())
 }
 
-func (m *Model) View() string {
-	var b strings.Builder
+// Return a styled view of the groups in the current filter
+//
+// Modifies the input builder and returns it in string form afterwards
+func (m *Model) renderGroupsView(b *strings.Builder) string {
 	height := m.WindowSize.Height - 6
 	width := m.WindowSize.Width - 4
+	var content strings.Builder
+	var groupList []client.GroupInfo
+	var controls string
+	if m.TUIState == SearchingGroups {
+		input := style.ItemTitle.Render(fmt.Sprintf("%s", m.SearchInput))
+		content.WriteString(fmt.Sprintf("Search: %s_\n\n", input))
+		groupList = m.FilteredGroups
+		controls = SearchViewControls
+	} else {
+		content.WriteString("\n\n")
+		groupList = m.Groups
+		controls = GroupsViewControls
+	}
+	// Get the entries for the current page
+	m.Paginator.SetTotalPages(len(groupList))
+	start, end := m.Paginator.GetSliceBounds(len(groupList))
+
+	// NOTE: There are some weird cases where [start:end] comes out something like
+	// [10:0], which makes no sense. We'll handle it here to avoid a crash
+	if start > end {
+		start, end = 0, 0
+	}
+	visibleGroups := groupList[start:end]
+	content.WriteString(style.SecondaryText.Render(fmt.Sprintf("Showing %d groups\n", len(groupList))))
+	// Render entries
+	for i, group := range visibleGroups {
+		var itemStyle = style.InactiveItem
+
+		if i == m.Cursor {
+			itemStyle = style.ActiveItem
+		}
+		content.WriteString(itemStyle.Render(FormatGroup(group, m.WindowSize.Width)))
+		content.WriteString(Hrule("#555555", m.WindowSize.Width-16))
+		content.WriteString("\n")
+	}
+	content.WriteString("  " + m.Paginator.View() + "\n")
+	content.WriteString(controls)
+
+	// Render content in content area
+	b.WriteString(style.Content.Width(width).Height(height).UnsetAlign().Align(lipgloss.Left).Render(content.String()))
+	return b.String()
+}
+
+func (m *Model) View() string {
+	var b strings.Builder
 
 	var tabs []string
 	for i, tab := range m.Tabs {
@@ -91,46 +138,15 @@ func (m *Model) View() string {
 	b.WriteString("\n")
 
 	if m.ActiveTab == 0 { // Groups tab
-
-		if m.ViewingMembers && m.SelectedGroup != nil {
-			return m.renderMembersView()
+		if m.TUIState == ViewingGroupMembers {
+			return m.renderMembersView() // note: tabs are not shown here
 		} else {
-			var content strings.Builder
-			var groupList []client.GroupInfo
-			var controls string
-			if m.IsSearching {
-				input := style.ItemTitle.Render(fmt.Sprintf("%s", m.SearchInput))
-				content.WriteString(fmt.Sprintf("Search: %s_\n\n", input))
-				groupList = m.FilteredGroups
-				controls = SearchViewControls
-			} else {
-				content.WriteString("\n\n")
-				groupList = m.Groups
-				controls = GroupsViewControls
-			}
-			// Get the entries for the current page
-			m.Paginator.SetTotalPages(len(groupList))
-			start, end := m.Paginator.GetSliceBounds(len(groupList))
-
-			visibleGroups := groupList[start:end]
-
-			content.WriteString(style.SecondaryText.Render(fmt.Sprintf("Showing %d groups\n", len(groupList))))
-			// Render entries
-			for i, group := range visibleGroups {
-				var itemStyle = style.InactiveItem
-
-				if i == m.Cursor {
-					itemStyle = style.ActiveItem
-				}
-				content.WriteString(itemStyle.Render(FormatGroup(group, m.WindowSize.Width)))
-				content.WriteString(Hrule("#555555", m.WindowSize.Width-16))
-				content.WriteString("\n")
-			}
-			content.WriteString("  " + m.Paginator.View() + "\n")
-			content.WriteString(controls)
-
-			// Render content in content area
-			b.WriteString(style.Content.Width(width).Height(height).UnsetAlign().Align(lipgloss.Left).Render(content.String()))
+			// We must be viewing the list of groups
+			return m.renderGroupsView(&b)
+		}
+	} else if m.ActiveTab == 1 { // Users tab
+		if m.TUIState == ViewingUsers {
+			return m.renderUsersView()
 		}
 	}
 

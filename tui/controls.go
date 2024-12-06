@@ -60,13 +60,12 @@ func (m *Model) SetGroupsViewControls(msg tea.KeyMsg) {
 	case "ctrl+right", "ctrl+l":
 		m.ActiveTab = min(m.ActiveTab+1, len(m.Tabs)-1)
 	case "enter":
-		if m.ViewingGroups && len(m.Groups) > 0 {
+		if m.TUIState == ViewingGroups && len(m.Groups) > 0 {
 			start, end := m.Paginator.GetSliceBounds(len(m.Groups))
 			visibleGroups := m.Groups[start:end]
 			if m.Cursor < len(visibleGroups) {
 				m.SelectedGroup = &visibleGroups[m.Cursor]
-				m.ViewingMembers = true
-				m.ViewingGroups = false
+				m.TUIState = ViewingGroupMembers
 			}
 		}
 	}
@@ -93,9 +92,7 @@ func (m *Model) SetSearchControls(msg tea.KeyMsg) {
 		m.filterGroups()
 
 	case tea.KeyEsc: // Reset search filter and return to previous view
-		m.IsSearching = false
-		m.ViewingGroups = true
-		m.ViewingMembers = false
+		m.TUIState = ViewingGroups
 		m.SearchInput = ""
 		m.FilteredGroups = m.Groups
 		m.Paginator.SetTotalPages(len(m.FilteredGroups))
@@ -132,9 +129,7 @@ func (m *Model) SetSearchControls(msg tea.KeyMsg) {
 			visibleGroups := m.FilteredGroups[start:end]
 			if m.Cursor < len(visibleGroups) {
 				m.SelectedGroup = &visibleGroups[m.Cursor]
-				m.ViewingMembers = true
-				m.ViewingGroups = false
-				m.IsSearching = false
+				m.TUIState = ViewingGroupMembers
 			}
 		}
 	}
@@ -144,9 +139,7 @@ func (m *Model) SetSearchControls(msg tea.KeyMsg) {
 func (m *Model) SetMemberViewControls(msg tea.KeyMsg) {
 	switch msg.String() {
 	case "b", "esc":
-		m.ViewingGroups = true
-		m.ViewingMembers = false
-		m.IsSearching = false
+		m.TUIState = ViewingGroups
 
 		// We clear the filter when returning, to simplify things. In the future we
 		// could revert to the search, if that was active before
