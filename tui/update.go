@@ -81,6 +81,5 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	m.Paginator, cmd = m.Paginator.Update(msg)
 	return m, cmd
 }

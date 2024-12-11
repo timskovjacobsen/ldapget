@@ -197,14 +197,12 @@ func (m *Model) View() string {
 			// We must be viewing the list of groups
 			return m.renderGroupsView(&b)
 		}
-	} else if m.ActiveTab == 1 { // Users tab
-		if m.Users == nil { // fetch users if we haven't yet
-			m.Users = client.Users(m.config)
-		}
-		if m.TUIState == ViewingUsers {
-			return m.renderUsersView()
-		}
 	}
+	// else if m.ActiveTab == 1 { // Users tab
+	// 	if m.TUIState == ViewingUsers {
+	// 		return m.renderUsersView()
+	// 	}
+	// }
 
 	return style.Window.
 		Width(m.WindowSize.Width).
