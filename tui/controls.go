@@ -60,13 +60,15 @@ func (m *Model) SetGroupsViewControls(msg tea.KeyMsg) {
 	case "ctrl+right", "ctrl+l":
 		m.ActiveTab = min(m.ActiveTab+1, len(m.Tabs)-1)
 	case "enter":
-		if m.TUIState == ViewingGroups && len(m.FilteredGroups) > 0 {
-			start, end := m.Paginator.GetSliceBounds(len(m.FilteredGroups))
-			visibleGroups := m.Groups[start:end]
-			if m.Cursor < len(visibleGroups) {
-				m.SelectedGroup = &visibleGroups[m.Cursor]
-				m.TUIState = ViewingGroupMembers
-			}
+		groupList := m.Groups
+		if len(m.FilteredGroups) > 0 {
+			groupList = m.FilteredGroups
+		}
+		start, end := m.Paginator.GetSliceBounds(len(groupList))
+		visibleGroups := groupList[start:end]
+		if m.Cursor < len(visibleGroups) {
+			m.SelectedGroup = &visibleGroups[m.Cursor]
+			m.TUIState = ViewingGroupMembers
 		}
 	}
 }

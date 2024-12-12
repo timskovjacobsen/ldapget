@@ -193,8 +193,10 @@ func (m *Model) View() string {
 		// Render the appropriate view
 		if m.TUIState == ViewingGroupMembers {
 			return m.renderMembersView() // note: tabs are not shown here
-		} else {
+		} else if m.TUIState == ViewingGroups {
 			// We must be viewing the list of groups
+			return m.renderGroupsView(&b)
+		} else {
 			return m.renderGroupsView(&b)
 		}
 	}
