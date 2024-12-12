@@ -9,7 +9,7 @@ require (
 	github.com/go-ldap/ldap/v3 v3.4.8
 	github.com/pelletier/go-toml v1.9.5
 	github.com/spf13/cobra v1.8.1
-	golang.org/x/term v0.18.0
+	golang.org/x/term v0.27.0
 )
 
 require (
@@ -30,8 +30,8 @@ require (
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/sync v0.9.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 )
