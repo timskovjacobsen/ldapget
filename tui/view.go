@@ -148,7 +148,7 @@ func (m *Model) renderUsersView(b *strings.Builder) string {
 	if start > end {
 		start, end = 0, 0
 	}
-	content.WriteString(style.SecondaryText.Render(fmt.Sprintf("Showing %d groups\n", len(userList))))
+	content.WriteString(style.SecondaryText.Render(fmt.Sprintf("Showing %d users\n", len(userList))))
 	// Render visible entries given by pager
 	for i, user := range userList[start:end] {
 		var itemStyle = style.InactiveItem
@@ -158,6 +158,7 @@ func (m *Model) renderUsersView(b *strings.Builder) string {
 		}
 		// TODO: create a FormatUser function, like for groups
 		content.WriteString(itemStyle.Render(user.Name))
+		content.WriteString("\n")
 		content.WriteString(Hrule("#555555", m.WindowSize.Width-16))
 		content.WriteString("\n")
 	}
@@ -199,12 +200,14 @@ func (m *Model) View() string {
 		} else {
 			return m.renderGroupsView(&b)
 		}
+	} else if m.ActiveTab == 1 { // Users tab
+		if m.Users == nil {
+			m.Users, _ = client.Users(m.Config)
+		}
+		// if m.TUIState == ViewingUsers {
+		return m.renderUsersView(&b)
+		// }
 	}
-	// else if m.ActiveTab == 1 { // Users tab
-	// 	if m.TUIState == ViewingUsers {
-	// 		return m.renderUsersView()
-	// 	}
-	// }
 
 	return style.Window.
 		Width(m.WindowSize.Width).

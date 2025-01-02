@@ -121,10 +121,12 @@ func (m *Model) SetSearchControls(msg tea.KeyMsg) {
 			m.Cursor = 0 // Reset cursor when changing pages
 			m.Paginator.PrevPage()
 		}
-	case "ctrl+left", "ctrl+h":
-		m.ActiveTab = max(m.ActiveTab-1, 0)
+	// case "ctrl+left", "ctrl+h":
+	// m.ActiveTab = max(m.ActiveTab-1, 0)
 	case "ctrl+right", "ctrl+l":
-		m.ActiveTab = min(m.ActiveTab+1, len(m.Tabs)-1)
+		// m.ActiveTab = min(m.ActiveTab+1, len(m.Tabs)-1)
+		m.ActiveTab = 1 // swtich to users tab
+		m.TUIState = ViewingUsers
 	case "enter":
 		if len(m.FilteredGroups) > 0 {
 			start, end := m.Paginator.GetSliceBounds(len(m.FilteredGroups))

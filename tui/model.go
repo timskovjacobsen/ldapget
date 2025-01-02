@@ -51,6 +51,15 @@ func (m *Model) IsSearching() bool {
 	return false
 }
 
+func itemsPerPage(itemHeight int) int {
+	// Assmuing everything other than items, i.e. header, footer, etc.
+	// takes up this many lines
+	linesOther := 23
+	_, h, _ := term.GetSize(int(os.Stderr.Fd()))
+	linesAllItems := h - linesOther
+	return linesAllItems / itemHeight
+}
+
 func NewModel(cfg *config.Config) *Model {
 
 	w, h, _ := term.GetSize(int(os.Stderr.Fd()))
@@ -63,7 +72,7 @@ func NewModel(cfg *config.Config) *Model {
 
 	p := paginator.New()
 	p.Type = paginator.Arabic
-	p.PerPage = 5
+	p.PerPage = itemsPerPage(7)
 	p.SetTotalPages(len(groups))
 
 	return &Model{
