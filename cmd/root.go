@@ -22,13 +22,15 @@ var cfg *config.Config
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "ldapget",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "A terminal UI and CLI tool for querying LDAP/Active Directory",
+	Long: `ldapget is a command-line tool for browsing and querying LDAP servers and Active Directory.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+It provides both an interactive terminal UI (TUI) and direct CLI commands to:
+  - List and search AD groups and their members
+  - Look up users and their group memberships
+  - Browse directory information in a user-friendly interface
+
+Configuration is read from ~/.config/ldapget/config.toml`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		globalConfig, err := config.ReadConfig("")
 		if err != nil {
@@ -39,7 +41,7 @@ to quickly create a Cobra application.`,
 	},
 
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("bare application")
+		cmd.Help()
 	},
 }
 
@@ -79,8 +81,8 @@ func GroupsCommand() *cobra.Command {
 
 func GroupCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "group",
-		Short: "group short",
+		Use:   "group <GROUP_NAME>",
+		Short: "List members of a specific AD group",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			group := args[0]
@@ -164,7 +166,7 @@ func UserCommand() *cobra.Command {
 func init() {
 	var tuiCmd = &cobra.Command{
 		Use:   "tui",
-		Short: "Tui",
+		Short: "Launch interactive terminal UI for browsing LDAP",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			program := tea.NewProgram(tui.NewModel(cfg), tea.WithAltScreen())
