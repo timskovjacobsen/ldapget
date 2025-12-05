@@ -37,7 +37,7 @@ type Model struct {
 	WindowSize     tea.WindowSizeMsg
 	TUIState       ViewState
 	SearchInput    string
-	// StatusMsg      string
+	ErrorMsg       string
 }
 
 // Return true if the current TUI state is a type of searching state
@@ -64,22 +64,16 @@ func NewModel(cfg *config.Config) *Model {
 
 	w, h, _ := term.GetSize(int(os.Stderr.Fd()))
 	tabs := []string{"Groups", "Users"}
-	groups := client.Groups(cfg) // By default we show all groups
-	var groupsContent []string
-	for _, group := range groups {
-		groupsContent = append(groupsContent, FormatGroup(group, w))
-	}
 
 	p := paginator.New()
 	p.Type = paginator.Arabic
 	p.PerPage = itemsPerPage(7)
-	p.SetTotalPages(len(groups))
 
 	return &Model{
 		Config:     cfg,
 		Tabs:       tabs,
 		ActiveTab:  0,
-		Groups:     groups,
+		Groups:     nil,
 		Paginator:  p,
 		WindowSize: tea.WindowSizeMsg{Width: w, Height: h},
 		TUIState:   ViewingGroups,

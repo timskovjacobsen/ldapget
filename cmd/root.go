@@ -61,7 +61,10 @@ func GroupsCommand() *cobra.Command {
 		Short: "List AD groups with related information",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			groups := client.Groups(cfg)
+			groups, err := client.Groups(cfg)
+			if err != nil {
+				log.Fatalf("Failed to fetch groups: %v", err)
+			}
 
 			var headerStyle = lipgloss.NewStyle().
 				BorderStyle(lipgloss.RoundedBorder()).

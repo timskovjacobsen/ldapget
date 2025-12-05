@@ -83,6 +83,12 @@ func (m *Model) renderGroupsView(b *strings.Builder) string {
 	var content strings.Builder
 	var groupList []client.GroupInfo
 	var controls string
+
+	if m.ErrorMsg != "" {
+		errorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).Bold(true)
+		content.WriteString(errorStyle.Render(fmt.Sprintf("⚠ %s\n\n", m.ErrorMsg)))
+	}
+
 	if m.TUIState == SearchingGroups {
 		input := style.ItemTitle.Render(fmt.Sprintf("%s", m.SearchInput))
 		content.WriteString(fmt.Sprintf("Search: %s_\n\n", input))
@@ -129,6 +135,12 @@ func (m *Model) renderUsersView(b *strings.Builder) string {
 	var content strings.Builder
 	var userList []client.UserInfo
 	var controls string
+
+	if m.ErrorMsg != "" {
+		errorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).Bold(true)
+		content.WriteString(errorStyle.Render(fmt.Sprintf("⚠ %s\n\n", m.ErrorMsg)))
+	}
+
 	if m.TUIState == SearchingUsers {
 		input := style.ItemTitle.Render(fmt.Sprintf("%s", m.SearchInput))
 		content.WriteString(fmt.Sprintf("Search: %s_\n\n", input))
@@ -183,29 +195,36 @@ func (m *Model) View() string {
 	b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, tabs...))
 	b.WriteString("\n")
 
-	if m.ActiveTab == 0 { // Groups tab
+	if m.ActiveTab == 0 {
 		if m.Groups == nil {
-			// The groups are loaded by defualt when the TUI starts, but we might have
-			// cleared them from memory during the lifetime of the TUI, we'll fetch
-			// them again
-			m.Groups = client.Groups(m.Config)
+			groups, err := client.Groups(m.Config)
+			if err != nil {
+				m.ErrorMsg = fmt.Sprintf("Error loading groups: %v", err)
+				m.Groups = []client.GroupInfo{}
+			} else {
+				m.Groups = groups
+				m.ErrorMsg = ""
+			}
 		}
-		// Render the appropriate view
 		if m.TUIState == ViewingGroupMembers {
-			return m.renderMembersView() // note: tabs are not shown here
+			return m.renderMembersView()
 		} else if m.TUIState == ViewingGroups {
-			// We must be viewing the list of groups
 			return m.renderGroupsView(&b)
 		} else {
 			return m.renderGroupsView(&b)
 		}
-	} else if m.ActiveTab == 1 { // Users tab
+	} else if m.ActiveTab == 1 {
 		if m.Users == nil {
-			m.Users, _ = client.Users(m.Config)
+			users, err := client.Users(m.Config)
+			if err != nil {
+				m.ErrorMsg = fmt.Sprintf("Error loading users: %v", err)
+				m.Users = []client.UserInfo{}
+			} else {
+				m.Users = users
+				m.ErrorMsg = ""
+			}
 		}
-		// if m.TUIState == ViewingUsers {
 		return m.renderUsersView(&b)
-		// }
 	}
 
 	return style.Window.

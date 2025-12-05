@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"log"
 	"sort"
 	"strconv"
 
@@ -32,22 +31,23 @@ func groupsRequest(conn *ldap.Conn, baseDN string) (*ldap.SearchResult, error) {
 }
 
 // Return a list of groups with all relevant info attached
-func Groups(cfg *config.Config) []GroupInfo {
+func Groups(cfg *config.Config) ([]GroupInfo, error) {
 	baseDN := cfg.Client.Search.BaseDN
 	conn, err := BindToLdapServer(*cfg)
 	if err != nil {
-		log.Fatalf("failed to bind to ldap server: %v", err)
+		return nil, fmt.Errorf("failed to bind to ldap server: %w", err)
 	}
+	defer conn.Close()
+
 	result, err := groupsRequest(conn, baseDN)
 	if err != nil {
-		log.Fatalf("failed to search LDAP server for groups: %v", err)
+		return nil, fmt.Errorf("failed to search LDAP server for groups: %w", err)
 	}
 	if len(result.Entries) == 0 {
-		log.Fatalf("no groups found")
+		return nil, fmt.Errorf("no groups found")
 	}
 	var groups []GroupInfo
 	for _, entry := range result.Entries {
-		// Decode the insane group type that is returned
 		groupType, _ := strconv.ParseInt(entry.GetAttributeValue("groupType"), 10, 64)
 		scope, kind, isSystem := groupTypeInfo(groupType)
 
@@ -65,5 +65,5 @@ func Groups(cfg *config.Config) []GroupInfo {
 	sort.Slice(groups, func(i, j int) bool {
 		return groups[i].Name < groups[j].Name
 	})
-	return groups
+	return groups, nil
 }
