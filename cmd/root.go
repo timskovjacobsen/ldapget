@@ -66,34 +66,14 @@ func GroupsCommand() *cobra.Command {
 				BorderForeground(lipgloss.Color("#cbba82")).
 				BorderTop(true).
 				BorderBottom(true)
-			// var nameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#cbba82"))
 
 			fmt.Println(headerStyle.Render("\nAD Groups Information:"))
 			fmt.Println(tui.Hrule("#555555", 80))
-			formattedGroups := make([]string, len(groups))
 			for i, group := range groups {
-				formattedGroups[i] = tui.FormatGroup(group, 80)
-
-				// fmt.Printf("%d. ", i+1)
-				// fmt.Println(nameStyle.Render(fmt.Sprintf("%s", group.Name)))
-				// fmt.Printf("   🗺️ %s\n", group.DN)
-				// fmt.Printf("   🏷️ %s group\n", group.Kind)
-				// if group.SystemCreated {
-				// 	fmt.Printf("   System created: %s\n", "yes")
-				// }
-				// fmt.Printf("   🎯 %s scope\n", group.Scope)
-				// if group.Description != "" {
-				// 	fmt.Printf("   📝 %s\n", group.Description)
-				// }
-				// fmt.Printf("   👥 %d members\n", group.Members)
-				// fmt.Println(tui.Hrule())
+				fmt.Println(fmt.Sprintf(" %d. %s", i, group.Name))
 			}
-			// program := tea.NewProgram(tui.NewModel(formattedGroups), tea.WithAltScreen())
-			// _, err := program.Run()
-			// fmt.Println(err)
 		},
 	}
-	// return err
 	return cmd
 }
 
@@ -187,12 +167,6 @@ func init() {
 		Short: "Tui",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			// groups := client.Groups(cfg)
-
-			// formattedGroups := make([]string, len(groups))
-			// for i, group := range groups {
-			// 	formattedGroups[i] = tui.FormatGroup(group)
-			// }
 			program := tea.NewProgram(tui.NewModel(cfg), tea.WithAltScreen())
 			_, err := program.Run()
 			if err != nil {

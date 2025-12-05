@@ -156,7 +156,6 @@ func (m *Model) renderUsersView(b *strings.Builder) string {
 		if i == m.Cursor {
 			itemStyle = style.ActiveItem
 		}
-		// TODO: create a FormatUser function, like for groups
 		content.WriteString(itemStyle.Render(user.Name))
 		content.WriteString("\n")
 		content.WriteString(Hrule("#555555", m.WindowSize.Width-16))

@@ -67,7 +67,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.TUIState == ViewingUsers {
 				m.TUIState = SearchingUsers
 				m.SearchInput = ""
-				// m.filterUsers()
 				return m, nil
 			}
 		}
